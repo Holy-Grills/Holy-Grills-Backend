@@ -17,7 +17,17 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   await app.register(sensible);
-  await app.register(helmet);
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "validator.swagger.io"],
+        connectSrc: ["'self'"]
+      }
+    }
+  });
   await app.register(cors, {
     origin: corsOrigins,
     credentials: true
