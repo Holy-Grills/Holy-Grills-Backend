@@ -1,0 +1,298 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  student
+  kitchen
+  rider
+  admin
+}
+
+enum OrderStatus {
+  scheduled
+  payment_pending
+  received
+  preparing
+  ready
+  batched
+  assigned_to_rider
+  on_the_way
+  delivered
+  delivery_attempted
+  unclaimed
+  cancelled
+  refunded
+}
+
+enum PaymentStatus {
+  initiated
+  pending
+  successful
+  failed
+  abandoned
+  refunded
+}
+
+enum PaymentMethod {
+  wallet
+  card
+  split
+}
+
+enum HpTransactionType {
+  earn
+  spend
+  expire
+  admin_grant
+}
+
+enum WalletTransactionType {
+  credit
+  debit
+}
+
+enum DeliveryWindowStatus {
+  draft
+  open
+  closed
+  batching
+  batched
+  in_delivery
+  completed
+  cancelled
+}
+
+enum DeliveryBatchStatus {
+  created
+  assigned
+  in_delivery
+  completed
+  partially_failed
+}
+
+enum MarketplaceCodeStatus {
+  available
+  assigned
+  redeemed
+  void
+}
+
+model User {
+  id                     String              @id @default(uuid())
+  name                   String
+  email                  String              @unique
+  passwordHash           String?
+  phone                  String?
+  dob                    DateTime?
+  faculty                String?
+  photoUrl               String?
+  role                   UserRole            @default(student)
+  googleId               String?             @unique
+  emailVerifiedAt        DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  orders                 Order[]
+  hpTransactions         HpTransaction[]
+  walletTransactions     WalletTransaction[]
+  createdDeliveryWindows DeliveryWindow[]    @relation("DeliveryWindowCreator")
+  assignedBatches        DeliveryBatch[]      @relation("RiderBatches")
+  auditLogs              AdminAuditLog[]      @relation("AdminAuditActor")
+  refreshTokens          RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, expiresAt])
+}
+
+model MenuCategory {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  slug      String     @unique
+  sortOrder Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     MenuItem[]
+}
+
+model MenuItem {
+  id           String      @id @default(uuid())
+  name         String
+  description  String
+  priceKobo    Int
+  categoryId   String
+  category     MenuCategory @relation(fields: [categoryId], references: [id])
+  photoUrl     String?
+  hpEarnValue  Int
+  sku          String      @unique
+  isAvailable  Boolean     @default(true)
+  dietaryTags  String[]    @default([])
+  archivedAt   DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  orderItems   OrderItem[]
+
+  @@index([categoryId, isAvailable])
+}
+
+model Order {
+  id                  String               @id @default(uuid())
+  orderNumber         String               @unique
+  userId              String?
+  user                User?                @relation(fields: [userId], references: [id])
+  status              OrderStatus
+  paymentStatus       PaymentStatus
+  deliveryWindowId    String?
+  deliveryWindow      DeliveryWindow?      @relation(fields: [deliveryWindowId], references: [id])
+  deliveryAddress     String
+  totalKobo           Int
+  paymentMethod       PaymentMethod
+  paymentRef          String?
+  hpEarned            Int                  @default(0)
+  notes               String?
+  guestName           String?
+  guestPhone          String?
+  guestEmail          String?
+  secureTrackingToken String?              @unique
+  deliveredAt         DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  items               OrderItem[]
+  statusHistory       OrderStatusHistory[]
+  batchOrders         BatchOrder[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([deliveryWindowId, status])
+}
+
+model OrderItem {
+  id               String   @id @default(uuid())
+  orderId          String
+  order            Order    @relation(fields: [orderId], references: [id])
+  menuItemId       String
+  menuItem         MenuItem @relation(fields: [menuItemId], references: [id])
+  itemNameSnapshot String
+  quantity         Int
+  unitPriceKobo    Int
+  subtotalKobo     Int
+
+  @@index([orderId])
+}
+
+model OrderStatusHistory {
+  id          String      @id @default(uuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id])
+  status      OrderStatus
+  actorUserId String?
+  note        String?
+  createdAt   DateTime    @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model DeliveryWindow {
+  id               String               @id @default(uuid())
+  label            String
+  opensAt          DateTime
+  closesAt         DateTime
+  cutoffAt         DateTime?
+  capacity         Int?
+  status           DeliveryWindowStatus @default(draft)
+  createdById      String?
+  createdBy        User?                @relation("DeliveryWindowCreator", fields: [createdById], references: [id])
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  orders           Order[]
+  batches          DeliveryBatch[]
+
+  @@index([status, opensAt, closesAt])
+}
+
+model DeliveryBatch {
+  id        String              @id @default(uuid())
+  windowId  String
+  window    DeliveryWindow      @relation(fields: [windowId], references: [id])
+  riderId   String?
+  rider     User?               @relation("RiderBatches", fields: [riderId], references: [id])
+  zone      String
+  status    DeliveryBatchStatus @default(created)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  orders    BatchOrder[]
+
+  @@index([windowId, riderId, status])
+}
+
+model BatchOrder {
+  id      String        @id @default(uuid())
+  batchId String
+  batch   DeliveryBatch @relation(fields: [batchId], references: [id])
+  orderId String
+  order   Order         @relation(fields: [orderId], references: [id])
+
+  @@unique([batchId, orderId])
+  @@index([orderId])
+}
+
+model HpTransaction {
+  id             String            @id @default(uuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id])
+  amount         Int
+  type           HpTransactionType
+  referenceId    String?
+  referenceType  String?
+  idempotencyKey String?           @unique
+  notes          String?
+  createdAt      DateTime          @default(now())
+
+  @@index([userId, createdAt])
+  @@index([referenceType, referenceId])
+}
+
+model WalletTransaction {
+  id             String                @id @default(uuid())
+  userId         String
+  user           User                  @relation(fields: [userId], references: [id])
+  amountKobo     Int
+  type           WalletTransactionType
+  reference      String?
+  idempotencyKey String?               @unique
+  metadata       Json?
+  createdAt      DateTime              @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model AdminAuditLog {
+  id           String   @id @default(uuid())
+  adminId      String
+  admin        User     @relation("AdminAuditActor", fields: [adminId], references: [id])
+  action       String
+  resourceType String
+  resourceId   String?
+  before       Json?
+  after        Json?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([resourceType, resourceId])
+}
