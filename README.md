@@ -97,3 +97,37 @@ http://18.207.92.217:4000/api/v1/auth/google/callback
 ```
 
 If the API is later placed behind Nginx on port `80` or a domain, update `API_BASE_URL`, `GOOGLE_OAUTH_REDIRECT_URL`, and Google Console to the public URL users actually visit.
+
+## GitHub Actions Deployment
+
+Pushes to `main` can deploy automatically to the Windows VPS through `.github/workflows/deploy-vps.yml`.
+
+Add these repository secrets in GitHub:
+
+```text
+VPS_HOST=18.207.92.217
+VPS_USER=Administrator
+VPS_SSH_PORT=22
+VPS_APP_DIR=C:\Users\Administrator\Desktop\Holy-Grills-Backend
+VPS_SSH_KEY=<private SSH key for the VPS user>
+```
+
+The VPS must have:
+
+- Git
+- Node.js
+- PM2 installed globally
+- OpenSSH Server enabled
+- The backend repo cloned at `VPS_APP_DIR`
+- A private `.env` file in `VPS_APP_DIR`
+
+The deploy script runs:
+
+```text
+git fetch origin main
+git reset --hard origin/main
+npm ci
+npx prisma generate
+npm run build
+pm2 restart holy-grills-backend --update-env
+```

@@ -1,0 +1,28 @@
+name: Deploy Backend To Windows VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script_stop: true
+          script: |
+            powershell -NoProfile -ExecutionPolicy Bypass -Command "cd '${{ secrets.VPS_APP_DIR }}'; git fetch origin main; git reset --hard origin/main; powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\deploy-windows.ps1"
