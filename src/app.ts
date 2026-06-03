@@ -22,9 +22,13 @@ export async function buildApp(): Promise<FastifyInstance> {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrcElem: ["'self'"],
+        scriptSrcAttr: ["'none'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
+        styleSrcElem: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "validator.swagger.io"],
-        connectSrc: ["'self'"]
+        connectSrc: ["'self'"],
+        upgradeInsecureRequests: null
       }
     }
   });
