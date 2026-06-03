@@ -18,6 +18,13 @@ type LoginInput = {
   password: string;
 };
 
+type BootstrapAdminInput = {
+  name: string;
+  email: string;
+  password: string;
+  bootstrapToken: string;
+};
+
 const safeUserSelect = {
   id: true,
   name: true,
@@ -45,6 +52,46 @@ export const authService = {
     const refreshToken = await createRefreshToken(userId);
 
     return { refreshToken };
+  },
+
+  async bootstrapAdmin(input: BootstrapAdminInput) {
+    if (!env.ADMIN_BOOTSTRAP_TOKEN || input.bootstrapToken !== env.ADMIN_BOOTSTRAP_TOKEN) {
+      throw appErrors.forbidden("Admin bootstrap token is invalid.", "INVALID_BOOTSTRAP_TOKEN");
+    }
+
+    const existingAdmin = await prisma.user.findFirst({
+      where: { role: "admin" },
+      select: { id: true }
+    });
+
+    if (existingAdmin) {
+      throw appErrors.conflict("An admin account already exists.", "ADMIN_ALREADY_EXISTS");
+    }
+
+    const email = input.email.toLowerCase();
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true }
+    });
+
+    if (existingUser) {
+      throw appErrors.conflict("An account with this email already exists.", "EMAIL_ALREADY_EXISTS");
+    }
+
+    const passwordHash = await argon2.hash(input.password);
+    const user = await prisma.user.create({
+      data: {
+        name: input.name,
+        email,
+        passwordHash,
+        role: "admin",
+        emailVerifiedAt: new Date()
+      },
+      select: safeUserSelect
+    });
+    const refreshToken = await createRefreshToken(user.id);
+
+    return { user, refreshToken };
   },
 
   async register(input: RegisterInput) {

@@ -29,6 +29,7 @@ export async function registerSwagger(app: FastifyInstance): Promise<void> {
       tags: [
         { name: "Health", description: "API and integration health checks" },
         { name: "Auth", description: "Registration, login, and current user identity" },
+        { name: "Admin Users", description: "Admin-managed staff and student accounts" },
         { name: "Menu", description: "Menu browsing and admin menu management" },
         { name: "Orders", description: "Student and guest ordering workflows" }
       ]

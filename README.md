@@ -23,6 +23,42 @@ That means:
 - "Continue with Google" should be implemented through backend-managed Google OAuth and linked to the same `users` table.
 - Avoid mixing Supabase Auth users with custom backend users unless the auth architecture is intentionally changed.
 
+## First Admin
+
+Set a strong one-time bootstrap token in `.env`:
+
+```env
+ADMIN_BOOTSTRAP_TOKEN=replace-with-one-time-admin-bootstrap-token
+```
+
+Then call:
+
+```text
+POST /api/v1/auth/bootstrap-admin
+```
+
+Body:
+
+```json
+{
+  "name": "Holy Grills Admin",
+  "email": "admin@example.com",
+  "password": "change-this-password",
+  "bootstrapToken": "replace-with-one-time-admin-bootstrap-token"
+}
+```
+
+This endpoint works only while no admin account exists. After the first admin is created, use:
+
+```text
+POST /api/v1/admin/users
+GET /api/v1/admin/users
+```
+
+to manage admin, kitchen, rider, and student accounts.
+
+For production, remove or rotate `ADMIN_BOOTSTRAP_TOKEN` after the first admin account exists.
+
 ## Frontend URL Variables
 
 These values in `.env.example` are frontend origins and link targets, not separate backend ports:

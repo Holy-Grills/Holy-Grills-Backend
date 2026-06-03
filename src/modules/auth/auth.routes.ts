@@ -22,6 +22,13 @@ const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1)
 });
 
+const bootstrapAdminSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(8),
+  bootstrapToken: z.string().min(1)
+});
+
 const googleStartQuerySchema = z.object({
   redirectTo: z.string().url().optional()
 });
@@ -50,6 +57,37 @@ const authResponseSchema = {
 } as const;
 
 export async function authRoutes(app: FastifyInstance): Promise<void> {
+  app.post(
+    "/bootstrap-admin",
+    {
+      schema: {
+        tags: ["Auth"],
+        summary: "Create the first admin account",
+        description: "Creates the first admin only when no admin exists and the configured bootstrap token matches.",
+        body: {
+          type: "object",
+          required: ["name", "email", "password", "bootstrapToken"],
+          properties: {
+            name: { type: "string", minLength: 2 },
+            email: { type: "string", format: "email" },
+            password: { type: "string", minLength: 8 },
+            bootstrapToken: { type: "string" }
+          }
+        },
+        response: {
+          201: authResponseSchema
+        }
+      }
+    },
+    async (request, reply) => {
+      const input = bootstrapAdminSchema.parse(request.body);
+      const result = await authService.bootstrapAdmin(input);
+      const accessToken = app.jwt.sign(result.user);
+
+      return reply.status(201).send({ ...result, accessToken });
+    }
+  );
+
   app.get(
     "/google",
     {
