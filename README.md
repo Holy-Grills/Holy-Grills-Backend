@@ -108,6 +108,61 @@ GET /docs
 GET /docs/json
 ```
 
+## Implemented Routes
+
+Auth:
+
+```text
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
+GET /api/v1/auth/me
+GET /api/v1/auth/google
+GET /api/v1/auth/google/callback
+POST /api/v1/auth/bootstrap-admin
+```
+
+Admin users:
+
+```text
+GET /api/v1/admin/users
+POST /api/v1/admin/users
+```
+
+Menu:
+
+```text
+GET /api/v1/menu/categories
+POST /api/v1/menu/categories
+PATCH /api/v1/menu/categories/:id
+GET /api/v1/menu
+GET /api/v1/menu/:id
+POST /api/v1/menu/items
+PATCH /api/v1/menu/items/:id
+PATCH /api/v1/menu/items/:id/availability
+DELETE /api/v1/menu/items/:id
+```
+
+Delivery windows:
+
+```text
+GET /api/v1/delivery-windows/current
+GET /api/v1/delivery-windows/next
+GET /api/v1/admin/delivery-windows
+POST /api/v1/admin/delivery-windows
+PATCH /api/v1/admin/delivery-windows/:id
+POST /api/v1/admin/delivery-windows/:id/open
+POST /api/v1/admin/delivery-windows/:id/close
+```
+
+Health:
+
+```text
+GET /api/v1/health
+GET /api/v1/health/redis
+```
+
 ## RDP/IP Hosting
 
 For a server hosted at `18.207.92.217` with the API exposed directly on port `4000`, use:
@@ -162,8 +217,8 @@ The deploy script runs:
 ```text
 git fetch origin main
 git reset --hard origin/main
-npm ci
-npx prisma generate
+npm ci --include=dev
+npm run prisma:generate
 npm run build
 pm2 restart holy-grills-backend --update-env
 ```

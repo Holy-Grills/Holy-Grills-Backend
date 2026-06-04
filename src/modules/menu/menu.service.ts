@@ -23,6 +23,22 @@ type CreateMenuCategoryInput = {
   sortOrder?: number;
 };
 
+type UpdateMenuCategoryInput = {
+  name?: string;
+  sortOrder?: number;
+};
+
+type UpdateMenuItemInput = {
+  name?: string;
+  description?: string;
+  price?: number;
+  categoryId?: string;
+  photoUrl?: string | null;
+  hpEarnValue?: number;
+  sku?: string;
+  dietaryTags?: string[];
+};
+
 export const menuService = {
   async listCategories() {
     const categories = await prisma.menuCategory.findMany({
@@ -57,6 +73,46 @@ export const menuService = {
     });
 
     return { category };
+  },
+
+  async updateCategory(id: string, input: UpdateMenuCategoryInput) {
+    const previous = await prisma.menuCategory.findUnique({
+      where: { id }
+    });
+
+    if (!previous) {
+      throw appErrors.notFound("Menu category not found.", "MENU_CATEGORY_NOT_FOUND");
+    }
+
+    let slug = previous.slug;
+
+    if (input.name) {
+      slug = slugify(input.name);
+
+      if (!slug) {
+        throw appErrors.badRequest("Category name must contain letters or numbers.", "INVALID_CATEGORY_NAME");
+      }
+
+      const existingCategory = await prisma.menuCategory.findUnique({
+        where: { slug },
+        select: { id: true }
+      });
+
+      if (existingCategory && existingCategory.id !== id) {
+        throw appErrors.conflict("A menu category with this name already exists.", "MENU_CATEGORY_ALREADY_EXISTS");
+      }
+    }
+
+    const category = await prisma.menuCategory.update({
+      where: { id },
+      data: {
+        name: input.name,
+        slug,
+        sortOrder: input.sortOrder
+      }
+    });
+
+    return { category, previous };
   },
 
   async listMenuItems(input: ListMenuItemsInput) {
@@ -123,5 +179,99 @@ export const menuService = {
     });
 
     return { item };
+  },
+
+  async updateMenuItem(id: string, input: UpdateMenuItemInput) {
+    const previous = await prisma.menuItem.findFirst({
+      where: {
+        id,
+        archivedAt: null
+      }
+    });
+
+    if (!previous) {
+      throw appErrors.notFound("Menu item not found.", "MENU_ITEM_NOT_FOUND");
+    }
+
+    if (input.categoryId) {
+      const category = await prisma.menuCategory.findUnique({
+        where: { id: input.categoryId },
+        select: { id: true }
+      });
+
+      if (!category) {
+        throw appErrors.badRequest("Menu category does not exist.", "MENU_CATEGORY_NOT_FOUND");
+      }
+    }
+
+    if (input.sku && input.sku !== previous.sku) {
+      const existingSku = await prisma.menuItem.findUnique({
+        where: { sku: input.sku },
+        select: { id: true }
+      });
+
+      if (existingSku) {
+        throw appErrors.conflict("A menu item with this SKU already exists.", "MENU_ITEM_SKU_ALREADY_EXISTS");
+      }
+    }
+
+    const item = await prisma.menuItem.update({
+      where: { id },
+      data: {
+        name: input.name,
+        description: input.description,
+        categoryId: input.categoryId,
+        photoUrl: input.photoUrl,
+        hpEarnValue: input.hpEarnValue,
+        sku: input.sku,
+        dietaryTags: input.dietaryTags,
+        priceKobo: input.price === undefined ? undefined : Math.round(input.price * 100)
+      }
+    });
+
+    return { item, previous };
+  },
+
+  async setMenuItemAvailability(id: string, isAvailable: boolean) {
+    const previous = await prisma.menuItem.findFirst({
+      where: {
+        id,
+        archivedAt: null
+      }
+    });
+
+    if (!previous) {
+      throw appErrors.notFound("Menu item not found.", "MENU_ITEM_NOT_FOUND");
+    }
+
+    const item = await prisma.menuItem.update({
+      where: { id },
+      data: { isAvailable }
+    });
+
+    return { item, previous };
+  },
+
+  async archiveMenuItem(id: string) {
+    const previous = await prisma.menuItem.findFirst({
+      where: {
+        id,
+        archivedAt: null
+      }
+    });
+
+    if (!previous) {
+      throw appErrors.notFound("Menu item not found.", "MENU_ITEM_NOT_FOUND");
+    }
+
+    const item = await prisma.menuItem.update({
+      where: { id },
+      data: {
+        archivedAt: new Date(),
+        isAvailable: false
+      }
+    });
+
+    return { item, previous };
   }
 };
