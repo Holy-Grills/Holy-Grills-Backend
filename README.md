@@ -156,6 +156,14 @@ POST /api/v1/admin/delivery-windows/:id/open
 POST /api/v1/admin/delivery-windows/:id/close
 ```
 
+Operating hours:
+
+```text
+GET /api/v1/operating-hours/current
+GET /api/v1/admin/operating-hours
+PATCH /api/v1/admin/operating-hours
+```
+
 Health:
 
 ```text
@@ -174,6 +182,7 @@ PORT=4000
 API_BASE_URL=http://18.207.92.217:4000
 GOOGLE_OAUTH_REDIRECT_URL=http://18.207.92.217:4000/api/v1/auth/google/callback
 CORS_ORIGINS=http://18.207.92.217:3000,http://18.207.92.217:4000
+STORE_TIMEZONE=Africa/Lagos
 ```
 
 Google OAuth console values:
@@ -219,6 +228,7 @@ git fetch origin main
 git reset --hard origin/main
 npm ci --include=dev
 npm run prisma:generate
+npm run prisma:migrate:deploy
 npm run build
 pm2 restart holy-grills-backend --update-env
 ```

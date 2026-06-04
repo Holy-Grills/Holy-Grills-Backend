@@ -45,6 +45,10 @@ Invoke-Checked "Generating Prisma client..." {
   npm run prisma:generate
 }
 
+Invoke-Checked "Applying database migrations..." {
+  npm run prisma:migrate:deploy
+}
+
 Invoke-Checked "Building backend..." {
   npm run build
 }

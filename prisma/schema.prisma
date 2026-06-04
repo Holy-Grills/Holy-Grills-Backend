@@ -224,6 +224,17 @@ model DeliveryWindow {
   @@index([status, opensAt, closesAt])
 }
 
+model OperatingHour {
+  id              String   @id @default(uuid())
+  dayOfWeek       Int      @unique
+  opensAtMinutes  Int
+  closesAtMinutes Int
+  isClosed        Boolean  @default(false)
+  overrideMessage String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 model DeliveryBatch {
   id        String              @id @default(uuid())
   windowId  String

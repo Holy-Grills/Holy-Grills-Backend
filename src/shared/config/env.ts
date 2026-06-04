@@ -10,6 +10,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   DIRECT_URL: z.string().min(1),
   REDIS_URL: z.string().default("redis://localhost:6379"),
+  STORE_TIMEZONE: z.string().default("Africa/Lagos"),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),

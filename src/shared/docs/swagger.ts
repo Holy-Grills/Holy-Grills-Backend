@@ -49,6 +49,10 @@ export async function registerSwagger(app: FastifyInstance): Promise<void> {
           name: "Delivery Windows",
           description: "Delivery window scheduling and admin controls",
         },
+        {
+          name: "Operating Hours",
+          description: "Store operating status and admin-managed weekly schedule",
+        },
       ],
     },
   });
