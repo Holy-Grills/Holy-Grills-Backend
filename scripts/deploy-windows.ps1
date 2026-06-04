@@ -23,6 +23,20 @@ if (-not (Test-Path ".env")) {
   throw "Missing .env file in deployment directory. Create .env before deploying."
 }
 
+$pm2Check = pm2 describe holy-grills-backend 2>$null
+$pm2Exists = $LASTEXITCODE -eq 0
+
+if ($pm2Exists) {
+  Invoke-Checked "Stopping existing PM2 process..." {
+    pm2 stop holy-grills-backend
+  }
+}
+
+if (Test-Path "node_modules") {
+  Write-Host "Removing node_modules directory to avoid locked Prisma binaries..."
+  Remove-Item -Recurse -Force -ErrorAction SilentlyContinue node_modules
+}
+
 Invoke-Checked "Installing dependencies with npm ci..." {
   npm ci --include=dev
 }
@@ -35,9 +49,7 @@ Invoke-Checked "Building backend..." {
   npm run build
 }
 
-$pm2Check = pm2 describe holy-grills-backend 2>$null
-
-if ($LASTEXITCODE -eq 0) {
+if ($pm2Exists) {
   Invoke-Checked "Restarting existing PM2 process..." {
     pm2 restart holy-grills-backend --update-env
   }
