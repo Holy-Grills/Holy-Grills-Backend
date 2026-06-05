@@ -8,6 +8,7 @@ import { healthRoutes } from "./modules/health/health.routes.js";
 import { menuRoutes } from "./modules/menu/menu.routes.js";
 import { orderRoutes } from "./modules/orders/order.routes.js";
 import { operatingHoursRoutes } from "./modules/operating-hours/operating-hours.routes.js";
+import { paymentRoutes } from "./modules/payments/payment.routes.js";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(healthRoutes, { prefix: "/api/v1/health" });
@@ -17,6 +18,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(cartRoutes, { prefix: "/api/v1" });
   await app.register(checkoutRoutes, { prefix: "/api/v1/checkout" });
   await app.register(orderRoutes, { prefix: "/api/v1" });
+  await app.register(paymentRoutes, { prefix: "/api/v1" });
   await app.register(deliveryWindowRoutes, { prefix: "/api/v1" });
   await app.register(operatingHoursRoutes, { prefix: "/api/v1" });
 }

@@ -57,7 +57,7 @@ export async function checkoutRoutes(app: FastifyInstance): Promise<void> {
     schema: {
       tags: ["Checkout"],
       summary: "Create an authenticated student's order",
-      description: "Creates a payment_pending card order and Paystack-ready payment record. External Paystack initialization is not yet implemented.",
+      description: "Creates a payment_pending card order and Paystack payment record. Initialize payment using the returned order ID.",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",

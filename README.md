@@ -159,11 +159,34 @@ GET /api/v1/orders/:id
 PATCH /api/v1/orders/:id/delivered
 ```
 
-Authenticated checkout creates a card order and an internal Paystack-ready payment record in `initiated` state. Paystack transaction initialization and signed webhook confirmation are not implemented yet.
+Authenticated checkout creates a card order and an internal Paystack payment record in `initiated` state. The payment initialization endpoint returns Paystack's authorization URL/access code, and signed success webhooks move paid orders to `received`.
 
 Clients must send a stable, unique `idempotencyKey` to `POST /api/v1/checkout/order` and reuse it when retrying the same order request.
 
 The guest checkout endpoint currently creates a card-only order in `payment_pending` state. It will be moved onto the shared quote/payment workflow when Paystack integration is implemented.
+
+Paystack:
+
+```text
+POST /api/v1/payments/orders/:orderId/initialize
+GET /api/v1/payments/orders/:orderId
+POST /api/v1/webhooks/paystack
+```
+
+Configure Paystack with:
+
+```env
+PAYSTACK_SECRET_KEY=sk_test_replace_me
+PAYSTACK_CALLBACK_URL=http://localhost:3000/payment/callback
+```
+
+Set the Paystack dashboard webhook URL to:
+
+```text
+https://your-api-domain/api/v1/webhooks/paystack
+```
+
+Paystack signs webhook events using `PAYSTACK_SECRET_KEY`; a separate webhook secret is not required.
 
 Delivery windows:
 
@@ -204,6 +227,7 @@ API_BASE_URL=http://18.207.92.217:4000
 GOOGLE_OAUTH_REDIRECT_URL=http://18.207.92.217:4000/api/v1/auth/google/callback
 CORS_ORIGINS=http://18.207.92.217:3000,http://18.207.92.217:4000
 STORE_TIMEZONE=Africa/Lagos
+PAYSTACK_CALLBACK_URL=http://18.207.92.217:3000/payment/callback
 ```
 
 Google OAuth console values:

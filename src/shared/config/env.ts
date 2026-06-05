@@ -20,7 +20,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
   GOOGLE_OAUTH_REDIRECT_URL: z.string().url().optional().default("http://localhost:4000/api/v1/auth/google/callback"),
   PAYSTACK_SECRET_KEY: z.string().optional().default(""),
-  PAYSTACK_WEBHOOK_SECRET: z.string().optional().default(""),
+  PAYSTACK_CALLBACK_URL: z.string().url().optional().default("http://localhost:3000/payment/callback"),
   EMAIL_PROVIDER_API_KEY: z.string().optional().default(""),
   WEB_PUSH_PUBLIC_KEY: z.string().optional().default(""),
   WEB_PUSH_PRIVATE_KEY: z.string().optional().default(""),

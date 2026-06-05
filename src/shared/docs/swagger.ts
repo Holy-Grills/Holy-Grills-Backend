@@ -52,6 +52,10 @@ export async function registerSwagger(app: FastifyInstance): Promise<void> {
           name: "Checkout",
           description: "Order quotes and order placement workflows",
         },
+        {
+          name: "Payments",
+          description: "Paystack payment initialization, status, and webhook handling",
+        },
         { name: "Orders", description: "Student and guest ordering workflows" },
         {
           name: "Delivery Windows",
