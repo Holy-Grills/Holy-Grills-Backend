@@ -134,15 +134,25 @@ Menu:
 
 ```text
 GET /api/v1/menu/categories
-POST /api/v1/menu/categories
-PATCH /api/v1/menu/categories/:id
 GET /api/v1/menu
-GET /api/v1/menu/:id
-POST /api/v1/menu/items
-PATCH /api/v1/menu/items/:id
-PATCH /api/v1/menu/items/:id/availability
-DELETE /api/v1/menu/items/:id
+GET /api/v1/menu/items/:id
+POST /api/v1/admin/menu/categories
+PATCH /api/v1/admin/menu/categories/:id
+POST /api/v1/admin/menu/items
+PATCH /api/v1/admin/menu/items/:id
+PATCH /api/v1/admin/menu/items/:id/availability
+DELETE /api/v1/admin/menu/items/:id
 ```
+
+Checkout and orders:
+
+```text
+POST /api/v1/checkout/guest-order
+GET /api/v1/orders
+PATCH /api/v1/orders/:id/delivered
+```
+
+The guest checkout endpoint currently creates a card-only order in `payment_pending` state. Authenticated cart, quote, order placement, payment initiation, and payment confirmation are not implemented yet.
 
 Delivery windows:
 

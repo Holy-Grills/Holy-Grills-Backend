@@ -45,7 +45,7 @@ const idParamSchema = z.object({
 });
 
 export async function menuRoutes(app: FastifyInstance): Promise<void> {
-  app.get("/categories", {
+  app.get("/menu/categories", {
     schema: {
       tags: ["Menu"],
       summary: "List menu categories"
@@ -54,7 +54,7 @@ export async function menuRoutes(app: FastifyInstance): Promise<void> {
     return menuService.listCategories();
   });
 
-  app.post("/categories", {
+  app.post("/admin/menu/categories", {
     preHandler: requireRole("admin"),
     schema: {
       tags: ["Menu"],
@@ -86,7 +86,7 @@ export async function menuRoutes(app: FastifyInstance): Promise<void> {
     return reply.status(201).send(result);
   });
 
-  app.patch("/categories/:id", {
+  app.patch("/admin/menu/categories/:id", {
     preHandler: requireRole("admin"),
     schema: {
       tags: ["Menu"],
@@ -126,7 +126,7 @@ export async function menuRoutes(app: FastifyInstance): Promise<void> {
     return result;
   });
 
-  app.get("/", {
+  app.get("/menu", {
     schema: {
       tags: ["Menu"],
       summary: "List available menu items",
@@ -149,7 +149,7 @@ export async function menuRoutes(app: FastifyInstance): Promise<void> {
     return menuService.listMenuItems(query);
   });
 
-  app.post("/items", {
+  app.post("/admin/menu/items", {
     preHandler: requireRole("admin"),
     schema: {
       tags: ["Menu"],
@@ -191,7 +191,7 @@ export async function menuRoutes(app: FastifyInstance): Promise<void> {
     return reply.status(201).send(result);
   });
 
-  app.patch("/items/:id", {
+  app.patch("/admin/menu/items/:id", {
     preHandler: requireRole("admin"),
     schema: {
       tags: ["Menu"],
@@ -241,7 +241,7 @@ export async function menuRoutes(app: FastifyInstance): Promise<void> {
     return result;
   });
 
-  app.patch("/items/:id/availability", {
+  app.patch("/admin/menu/items/:id/availability", {
     preHandler: requireRole("admin"),
     schema: {
       tags: ["Menu"],
@@ -281,7 +281,7 @@ export async function menuRoutes(app: FastifyInstance): Promise<void> {
     return result;
   });
 
-  app.delete("/items/:id", {
+  app.delete("/admin/menu/items/:id", {
     preHandler: requireRole("admin"),
     schema: {
       tags: ["Menu"],
@@ -313,7 +313,7 @@ export async function menuRoutes(app: FastifyInstance): Promise<void> {
     return result;
   });
 
-  app.get("/:id", {
+  app.get("/menu/items/:id", {
     schema: {
       tags: ["Menu"],
       summary: "Get a menu item",
