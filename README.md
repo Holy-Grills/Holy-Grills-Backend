@@ -147,12 +147,23 @@ DELETE /api/v1/admin/menu/items/:id
 Checkout and orders:
 
 ```text
+GET /api/v1/cart
+POST /api/v1/cart/items
+PATCH /api/v1/cart/items/:id
+DELETE /api/v1/cart/items/:id
+POST /api/v1/checkout/quote
+POST /api/v1/checkout/order
 POST /api/v1/checkout/guest-order
 GET /api/v1/orders
+GET /api/v1/orders/:id
 PATCH /api/v1/orders/:id/delivered
 ```
 
-The guest checkout endpoint currently creates a card-only order in `payment_pending` state. Authenticated cart, quote, order placement, payment initiation, and payment confirmation are not implemented yet.
+Authenticated checkout creates a card order and an internal Paystack-ready payment record in `initiated` state. Paystack transaction initialization and signed webhook confirmation are not implemented yet.
+
+Clients must send a stable, unique `idempotencyKey` to `POST /api/v1/checkout/order` and reuse it when retrying the same order request.
+
+The guest checkout endpoint currently creates a card-only order in `payment_pending` state. It will be moved onto the shared quote/payment workflow when Paystack integration is implemented.
 
 Delivery windows:
 

@@ -45,6 +45,10 @@ export async function registerSwagger(app: FastifyInstance): Promise<void> {
           description: "Menu browsing and admin menu management",
         },
         {
+          name: "Cart",
+          description: "Authenticated student cart management",
+        },
+        {
           name: "Checkout",
           description: "Order quotes and order placement workflows",
         },

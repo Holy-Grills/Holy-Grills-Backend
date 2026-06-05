@@ -46,6 +46,10 @@ enum PaymentMethod {
   split
 }
 
+enum PaymentProvider {
+  paystack
+}
+
 enum HpTransactionType {
   earn
   spend
@@ -105,6 +109,7 @@ model User {
   assignedBatches        DeliveryBatch[]      @relation("RiderBatches")
   auditLogs              AdminAuditLog[]      @relation("AdminAuditActor")
   refreshTokens          RefreshToken[]
+  cart                   Cart?
 }
 
 model RefreshToken {
@@ -145,8 +150,32 @@ model MenuItem {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   orderItems   OrderItem[]
+  cartItems    CartItem[]
 
   @@index([categoryId, isAvailable])
+}
+
+model Cart {
+  id         String     @id @default(uuid())
+  userId     String     @unique
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      CartItem[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model CartItem {
+  id         String   @id @default(uuid())
+  cartId     String
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([cartId, menuItemId])
+  @@index([cartId])
 }
 
 model Order {
@@ -162,6 +191,7 @@ model Order {
   totalKobo           Int
   paymentMethod       PaymentMethod
   paymentRef          String?
+  idempotencyKey      String?              @unique
   hpEarned            Int                  @default(0)
   notes               String?
   guestName           String?
@@ -174,10 +204,47 @@ model Order {
   items               OrderItem[]
   statusHistory       OrderStatusHistory[]
   batchOrders         BatchOrder[]
+  payments            Payment[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
   @@index([deliveryWindowId, status])
+}
+
+model Payment {
+  id                String          @id @default(uuid())
+  orderId           String
+  order             Order           @relation(fields: [orderId], references: [id])
+  provider          PaymentProvider @default(paystack)
+  providerReference String
+  status            PaymentStatus   @default(initiated)
+  amountKobo        Int
+  currency          String          @default("NGN")
+  authorizationUrl  String?
+  accessCode        String?
+  metadata          Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  events            PaymentEvent[]
+
+  @@unique([provider, providerReference])
+  @@index([orderId, createdAt])
+}
+
+model PaymentEvent {
+  id                String          @id @default(uuid())
+  paymentId         String?
+  payment           Payment?        @relation(fields: [paymentId], references: [id])
+  provider          PaymentProvider @default(paystack)
+  providerEventId   String?
+  eventType         String
+  signatureVerified Boolean
+  processedAt       DateTime?
+  payload           Json
+  createdAt         DateTime        @default(now())
+
+  @@unique([provider, providerEventId])
+  @@index([paymentId, createdAt])
 }
 
 model OrderItem {

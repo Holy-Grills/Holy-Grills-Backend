@@ -1,11 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { requireAuth, requireRole } from "../../shared/http/auth.js";
+import { requireRole } from "../../shared/http/auth.js";
 import { orderService } from "./order.service.js";
 
 export async function orderRoutes(app: FastifyInstance): Promise<void> {
-  app.get("/", {
-    preHandler: requireAuth,
+  app.get("/orders", {
+    preHandler: requireRole("student"),
     schema: {
       tags: ["Orders"],
       summary: "List current user's orders",
@@ -15,7 +15,27 @@ export async function orderRoutes(app: FastifyInstance): Promise<void> {
     return orderService.listOrdersForUser(request.currentUser!.id);
   });
 
-  app.patch("/:id/delivered", {
+  app.get("/orders/:id", {
+    preHandler: requireRole("student"),
+    schema: {
+      tags: ["Orders"],
+      summary: "Get one of the current student's orders",
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: "object",
+        required: ["id"],
+        properties: {
+          id: { type: "string", format: "uuid" }
+        }
+      }
+    }
+  }, async (request) => {
+    const params = z.object({ id: z.string().uuid() }).parse(request.params);
+
+    return orderService.getOrderForUser(request.currentUser!.id, params.id);
+  });
+
+  app.patch("/orders/:id/delivered", {
     preHandler: requireRole("rider", "admin"),
     schema: {
       tags: ["Orders"],

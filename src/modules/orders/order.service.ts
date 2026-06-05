@@ -26,6 +26,31 @@ export const orderService = {
     return { orders };
   },
 
+  async getOrderForUser(userId: string, orderId: string) {
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        userId
+      },
+      include: {
+        items: true,
+        deliveryWindow: true,
+        statusHistory: {
+          orderBy: { createdAt: "asc" }
+        },
+        payments: {
+          orderBy: { createdAt: "desc" }
+        }
+      }
+    });
+
+    if (!order) {
+      throw appErrors.notFound("Order not found.", "ORDER_NOT_FOUND");
+    }
+
+    return { order };
+  },
+
   async createGuestOrder(input: CreateGuestOrderInput) {
     const menuItems = await prisma.menuItem.findMany({
       where: {
